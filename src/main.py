@@ -1,6 +1,6 @@
 import aioredis
 from elasticsearch import AsyncElasticsearch
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI, Request, HTTPException
 from fastapi.responses import ORJSONResponse
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
@@ -32,13 +32,19 @@ async def startup():
         ]
     )
 
-
 @app.on_event("shutdown")
 async def shutdown():
     await redis.redis.close()
     await redis.redis.wait_closed()
     await elastic.es.close()
 
+@app.middleware("http")
+async def check_header(request: Request, call_next):
+    request_id = request.headers.get('X-Request-Id')
+    if not request_id:
+        raise HTTPException(status_code=400, detail='Request id is required')
+    response = await call_next(request)
+    return response
 
 app.include_router(films.router, prefix="/api/v1/films")
 app.include_router(genre.router, prefix="/api/v1/genre")

@@ -17,6 +17,10 @@ class Settings(BaseSettings):
     log_level: str
 
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    
+    verify_token_url: str
+    secret_key: str
+    jwt_algorithm: str
 
     class Config:
         env_file = "./.env"

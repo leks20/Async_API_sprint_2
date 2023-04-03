@@ -12,6 +12,8 @@ services:
     depends_on:
       redis:
         condition: service_started
+    networks:
+      - practicum
 
   db:
     image: postgres:13
@@ -25,6 +27,8 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_USER: user
       POSTGRES_DB: movies_dbs
+    networks:
+      - practicum
 
   elasticsearch:
     image: elasticsearch:7.17.8
@@ -37,7 +41,9 @@ services:
     ports:
       - "9200"
     restart: on-failure
-  
+    networks:
+      - practicum
+
   etl:
     build: ./etl4
     image: etl4
@@ -47,11 +53,15 @@ services:
       - elasticsearch
     volumes:
       - etl_volume:/opt/etl
+    networks:
+      - practicum
 
   redis:
     image: redis:6.2.4
     ports:
       - "6379"
+    networks:
+      - practicum
 
   nginx:
     image: nginx:1.23.1
@@ -64,7 +74,13 @@ services:
       web:
         condition: service_started
     restart: always
-
+    networks:
+      - practicum
+      
 volumes:
   postgres_data:
   etl_volume:
+
+networks:
+  practicum:
+    driver: bridge
