@@ -1,7 +1,7 @@
 from http import HTTPStatus
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, Header, Query
+from fastapi import APIRouter, Depends, HTTPException, Header, Query, Request
 
 from models.commons.sort import SortOrder
 from models.genre import Genre
@@ -19,6 +19,7 @@ router = APIRouter()
 )
 @check_permission(["admin"])
 async def genre_details(
+    request: Request,
     genre_id: str,
     genre_service: GenreService = Depends(get_genre_service),
     HTTPBearer: str = Header(name="HTTPBearer")
@@ -38,6 +39,7 @@ async def genre_details(
 )
 @check_permission(["admin", "user"])
 async def genre_search(
+    request: Request,
     query_: str,
     page_size_: int | None = Query(10, alias='page[size]', description='Items amount on page', ge=1),
     page_number_: int | None = Query(1, alias='page[number]', description='Page number for pagination', ge=1),

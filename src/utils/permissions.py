@@ -4,11 +4,10 @@ from typing import Any
 import jwt
 import httpx
 from httpx import AsyncClient
-from fastapi import HTTPException
+from fastapi import Depends, HTTPException, Request
 from fastapi import status
 from core.logger import logger
 from core.config import settings
-
 
 async def get_client() -> AsyncGenerator[AsyncClient, None]:
     async with AsyncClient() as client:
@@ -16,18 +15,23 @@ async def get_client() -> AsyncGenerator[AsyncClient, None]:
 
 
 async def verify_token(
-    access_token: str, required_roles: list[str]
+    access_token: str,
+    required_roles: list[str],
+    request: Request
 ) -> str | None:
     
     client = AsyncClient()
+    request_id = request.state.request_id
 
     try:
         response = await client.get(
             url=settings.verify_token_url,
             headers={
                 "Authorization": f"Bearer {access_token}",
+                "X-Request-Id": request_id,
             }
         )
+
         response.raise_for_status()
 
     except httpx.HTTPStatusError as e:
@@ -52,6 +56,7 @@ def check_permission(required_roles: list[str]) -> Any:
         async def inner_wrapper(*args: Any, **kwargs: Any) -> Any:
 
             access_token = kwargs.get("HTTPBearer")
+            request = kwargs.get("request")
 
             if not access_token:
                 msg = "Missing authorization token"
@@ -61,7 +66,7 @@ def check_permission(required_roles: list[str]) -> Any:
                     detail=msg,
                 )
 
-            result = await verify_token(access_token, required_roles)
+            result = await verify_token(access_token, required_roles, request)
 
             if isinstance(result, str):
                 logger.error(result, exc_info=True)

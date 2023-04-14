@@ -1,7 +1,7 @@
 from http import HTTPStatus
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, Header, Query
+from fastapi import APIRouter, Depends, HTTPException, Header, Query, Request
 
 from models.commons.sort import SortOrder
 from models.person import Person
@@ -20,6 +20,7 @@ router = APIRouter()
 )
 @check_permission(["admin"])
 async def person_details(
+    request: Request,
     person_id: str,
     person_service: PersonService = Depends(get_person_service),
     HTTPBearer: str = Header(name="HTTPBearer")
@@ -39,6 +40,7 @@ async def person_details(
 )
 @check_permission(["admin", "user"])
 async def person_search(
+    request: Request,
     query_: str,
     page_size_: int | None = Query(10, alias='page[size]', description='Items amount on page', ge=1),
     page_number_: int | None = Query(1, alias='page[number]', description='Page number for pagination', ge=1),

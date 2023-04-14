@@ -1,7 +1,7 @@
 from http import HTTPStatus
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, Header, Query
+from fastapi import APIRouter, Depends, HTTPException, Header, Query, Request
 
 from models.commons.sort import SortOrder
 from models.film import Film, FilmSortBy
@@ -21,8 +21,9 @@ router = APIRouter()
 @check_permission(["admin"])
 async def film_details(
     film_id: str,
+    request: Request,
     film_service: FilmService = Depends(get_film_service),
-    HTTPBearer: str = Header(name="HTTPBearer")
+    HTTPBearer: str = Header(name="HTTPBearer"),
 ) -> Film:
     if film := await film_service.get_by_id(film_id):
         return Film.from_orm(film)
@@ -38,6 +39,7 @@ async def film_details(
 )
 @check_permission(["admin", "user"])
 async def film_search(
+    request: Request,
     query_: str,
     page_size_: int | None = Query(10, alias='page[size]', description='Items amount on page', ge=1),
     page_number_: int | None = Query(1, alias='page[number]', description='Page number for pagination', ge=1),
